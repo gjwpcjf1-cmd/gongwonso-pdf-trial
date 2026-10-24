@@ -30,6 +30,8 @@ jobs:
           test -s site/vendor/pdf.min.mjs && test -s site/vendor/pdf.worker.min.mjs
           ! grep -q 'cdnjs.cloudflare.com' site/index.html
           ! grep -q 'const REGISTRY = new Map' site/index.html
+      - name: PDF.js real parsing regression (synthetic PDFs only)
+        run: node scripts/smoke.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
