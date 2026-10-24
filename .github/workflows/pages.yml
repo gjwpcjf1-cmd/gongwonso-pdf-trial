@@ -1,0 +1,41 @@
+name: Free G4.1 PDF trial - GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout only the public trial source
+        uses: actions/checkout@v4
+      - name: Prepare pinned local PDF.js build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site/vendor
+          npm install --prefix /tmp/gw-pdfjs --no-save --ignore-scripts --no-audit --no-fund --no-package-lock pdfjs-dist@4.10.38
+          cp /tmp/gw-pdfjs/node_modules/pdfjs-dist/build/pdf.min.mjs site/vendor/pdf.min.mjs
+          cp /tmp/gw-pdfjs/node_modules/pdfjs-dist/build/pdf.worker.min.mjs site/vendor/pdf.worker.min.mjs
+          test -s site/vendor/pdf.min.mjs && test -s site/vendor/pdf.worker.min.mjs
+          ! grep -q 'cdnjs.cloudflare.com' site/index.html
+          ! grep -q 'const REGISTRY = new Map' site/index.html
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload only public site (never PDF, answer keys, registry or student records)
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/
+      - name: Deploy to Pages HTTPS
+        id: deployment
+        uses: actions/deploy-pages@v4
