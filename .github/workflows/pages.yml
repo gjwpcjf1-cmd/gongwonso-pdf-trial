@@ -41,6 +41,8 @@ jobs:
           test -n "$GW_CHROME_BIN"
           python3 -m http.server 8765 --directory site >/tmp/gw-browser-server.log 2>&1 &
           node scripts/browser-smoke.mjs
+          node scripts/g5-test.mjs
+          node scripts/g5-browser-test.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
