@@ -9,7 +9,7 @@ if(!m)throw Error('Synthetic PDFs missing from public trial page');
 const p=path.join('/tmp/gw-pdfjs/node_modules/pdfjs-dist/build/pdf.min.mjs');
 const lib=await import(pathToFileURL(p).href);
 const out=[];
-for(const [label,raw] of [['ë¬¸ì ',m[1]],['í´ì¤',m[2]]]){
+for(const [label,raw] of [['문제',m[1]],['해설',m[2]]]){
  const bytes=Buffer.from(raw,'base64');
  const pdf=await lib.getDocument({data:new Uint8Array(bytes),stopAtErrors:true,isEvalSupported:false}).promise;
  if(pdf.numPages!==1)throw Error(`Expected 1 page, got ${pdf.numPages}`);
@@ -27,7 +27,7 @@ for(const [label,raw] of [['ë¬¸ì ',m[1]],['í´ì¤',m[2]]]){
  }
  const rows=groups.flatMap(a=>a.map(r=>({...r,text:r.parts.sort((a,b)=>a.x-b.x).map(t=>t.str).join(' ')})));
  const found=[];
- for(const row of rows){const h=row.text.match(/(?:^|[^\d])(\d{1,3})\s*ë²\s*(ë¬¸ì |í´ì¤)/);
+ for(const row of rows){const h=row.text.match(/(?:^|[^\d])(\d{1,3})\s*번\s*(문제|해설)/);
   if(!h||h[2]!==label)continue;
   const ids=rows.filter(r=>r.col===row.col&&Math.abs(r.y-row.y)<=20)
     .flatMap(r=>[...r.text.matchAll(/(?<!\d)\d{6}(?!\d)/g)].map(m=>m[0]));
