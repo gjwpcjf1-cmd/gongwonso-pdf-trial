@@ -1,0 +1,156 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>공원소 | 수학싸부 PDF 브라우저 실증</title><style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;color:#172234;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}main{max-width:780px;margin:auto;padding:18px 16px 60px}header{background:#182e53;color:white;padding:24px 16px 26px}header>div{max-width:780px;margin:auto}h1{font-size:21px;line-height:1.35;margin:8px 0}h2{font-size:17px;margin:0 0 13px}.tag{font-size:12px;color:#b8d8ff}p{line-height:1.55}section{background:white;padding:18px;border:1px solid #e2e8f2;border-radius:16px;margin:16px 0;box-shadow:0 4px 12px rgba(25,45,85,.03)}.note{border-left:4px solid #d99832;padding:10px 12px;background:#fff7e8;border-radius:5px;color:#6b4b17;font-size:13px;line-height:1.55}.good{border-left-color:#26845b;background:#edf9f2;color:#185b3c}label{display:block;font-weight:700;font-size:14px;margin:12px 0 6px}input[type=file]{width:100%;border:1px dashed #8aa3c4;border-radius:10px;padding:15px;background:#f8fbff;font-size:13px}button{padding:13px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#183354;font-size:14px;font-weight:700;cursor:pointer}button.primary{background:#1a4d8f;color:white;border-color:#1a4d8f}button:disabled{opacity:.48;cursor:not-allowed}button:focus-visible{outline:3px solid #ffaa3b}.buttons{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.buttons>*{flex:1}#progress{padding:10px;color:#334155;font-size:13px;min-height:36px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px 6px;border-bottom:1px solid #e9edf4;text-align:left}td:last-child{text-align:right}strong{font-weight:750}.ok{color:#17724d}.warn{color:#b36612}.err{color:#a92626}#previews{display:none}#previews canvas{max-width:100%;height:auto;display:block;margin:10px auto 15px;border:1px solid #d9e3ed}.previewGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.previewGrid>div{min-width:0}.tiny{font-size:12px;color:#667085}#issues{font-size:12px;white-space:pre-wrap;max-height:230px;overflow:auto;border:1px solid #e5eaf0;border-radius:8px;padding:10px}.itemSel{max-width:100%;width:100%;padding:11px;font-size:14px;border:1px solid #cbd5e1;border-radius:10px}footer{text-align:center;font-size:12px;color:#667085;padding:15px}@media(max-width:450px){.previewGrid{grid-template-columns:1fr}} </style></head>
+<body><header><div><div class="tag">공부원동력연구소 · 무료·격리 브라우저 실증 G4</div><h1>수학싸부 문제·해설<br>자동 대조 시험</h1><div class="tag">실학생 사용 금지 · 수학싸부 원본은 이 화면에서 서버로 전송하지 않음</div></div></header>
+<main><div class="note">이 화면은 <b>교사 전용 기술 검증본</b>입니다. 번호·고유 ID 대응만 자동 검사하며, 실제 학생용 공개·교재 등록·교사 최종 승인은 수행하지 않습니다. PDF 원본 파일은 브라우저 메모리에서만 읽습니다. PDF 분석 라이브러리는 이 사이트에서 함께 제공됩니다. 문제·해설 PDF는 서버에 업로드되지 않고 현재 기기의 브라우저 메모리에서만 분석합니다. 이 공개 시험 화면은 교재 자료실이 아닙니다.</div>
+<section><h2>1 · PDF 두 개 선택</h2><p class="tiny">예: <code>초5.7.1.문.pdf</code> 와 <code>초5.7.1.답.pdf</code> · 초3·4 단일권, 초5·6 분권 지원</p>
+<label for="prob">문제 PDF</label><input id="prob" type="file" accept=".pdf,application/pdf">
+<label for="ans">정답·해설 PDF</label><input id="ans" type="file" accept=".pdf,application/pdf">
+<div class="buttons"><button id="run" class="primary">문항번호·해설 자동 대조</button><button id="reset">초기화</button></div><div id="progress" role="status" aria-live="polite">검사할 PDF를 선택해 주세요.</div></section>
+<section id="result" hidden><h2>2 · 구조 검사 결과</h2><div id="summary"></div><div id="issues"></div><div class="buttons"><button id="save" class="primary" disabled>검증 후보 JSON 저장 (실학생용 아님)</button></div><p class="tiny">자동 승인 없음 · 누적 2,047문항 ID 충돌은 비공개 G2 관리 단계에서만 검사 · 같은 단원이라도 새 판본은 별도 서버 검증 필요</p></section>
+<section id="previews"><h2>3 · 원본 페이지 눈으로 확인</h2><p class="tiny">번호와 고유 ID가 같아도 풀이가 다른 페이지에 있거나 도형이 잘릴 수 있으므로, 실제 교사 검토는 필수입니다.</p><label for="sel">확인할 문항 선택</label><select id="sel" class="itemSel"></select><div class="buttons"><button id="show">문제·해설 페이지 보기</button></div><div class="previewGrid"><div><strong>문제 페이지</strong><canvas id="qcan"></canvas></div><div><strong>해설 페이지 (교사용)</strong><canvas id="acan"></canvas></div></div></section>
+<footer>공원소 G4 기술 실증 · 등록·결제·학생정보 처리 없음</footer></main>
+<script type="module">// Deterministic intake core
+// GW G4 browser-side intake: deterministic metadata extraction, NO publication or approval.
+const SCHEMA='GW_G4_BROWSER_CANDIDATE_V1';
+const VENDOR='MSSABU';
+const REG=/^초([3-6])\.(\d{1,2})(?:\.([12]))?\.(문|답)(?:\(\d+\))?\.pdf$/i;
+function parseName(name){
+  const m=REG.exec(String(name).normalize('NFC').trim());
+  if(!m) throw Error('파일명 규칙이 맞지 않습니다: '+name);
+  const grade=Number(m[1]), serial=Number(m[2]), part=Number(m[3]||1), kind=m[4]==='문'?'problem':'answer';
+  if(serial<1||serial>12||((grade<5)!==(!m[3])))throw Error('학년별 분권 규칙과 다릅니다: '+name);
+  const semester=serial<=6?1:2,unit=serial<=6?serial:serial-6;
+  return {grade,semester,unit,part,kind,setKey:`G${grade}_S${semester}_U${unit}_P${part}`,name};
+}
+function rowGroups(items,width){
+ const map=[[],[]];
+ for(const item of items){
+  const value=String(item.str??item.text??'').trim();
+  if(!value)continue;
+  const x=Number(item.x??item.transform?.[4]),y=Number(item.y??item.transform?.[5]);
+  if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+  const col=x<width/2?0:1, arr=map[col];
+  let row=arr.find(r=>Math.abs(r.y-y)<=6.4);
+  if(!row){row={y,parts:[],col};arr.push(row);}
+  row.parts.push({x,str:value});
+ }
+ return map.flatMap(arr=>arr.map(r=>({...r,parts:r.parts.sort((a,b)=>a.x-b.x),text:r.parts.map(t=>t.str).join(' ')})));
+}
+function extractPage(items,width,pageNumber,kind){
+ const rows=rowGroups(items,width);const rec=[],issues=[];
+ for(const r of rows){
+  const h=r.text.match(/(?:^|[^\d])(\d{1,3})\s*번\s*(문제|해설)/);
+  if(!h || (h[2]==='문제')!==(kind==='problem'))continue;
+  const number=Number(h[1]);
+  const cand=[];
+  for(const row of rows){
+   if(row.col!==r.col || Math.abs(row.y-r.y)>28)continue;
+   for(const m of row.text.matchAll(/(?<!\d)\d{6}(?!\d)/g))cand.push({id:m[0],dy:Math.abs(row.y-r.y)});
+  }
+  cand.sort((a,b)=>a.dy-b.dy);
+  const ids=[...new Set(cand.filter(x=>x.dy<=20).map(x=>x.id))];
+  if(ids.length!==1)issues.push({code:'ID_NOT_UNIQUE_NEAR_LABEL',page:pageNumber,number,ids});
+  rec.push({number,original_id:ids.length===1?ids[0]:null,page:pageNumber,column:r.col,heading_y:Math.round(r.y*100)/100});
+ }
+ return {items:rec,issues};
+}
+function buildPair(question,answer){
+ if(question.meta.setKey!==answer.meta.setKey || question.meta.kind!=='problem' || answer.meta.kind!=='answer')throw Error('문제/해설 파일 쌍이 아닙니다.');
+ const issues=[...question.issues,...answer.issues],q=new Map(),a=new Map();
+ for(const [records,m,target] of [[question.items,'문제',q],[answer.items,'해설',a]]){
+  for(const x of records){if(target.has(x.number))issues.push({code:'DUPLICATE_NUMBER',kind:m,number:x.number});target.set(x.number,x);}
+ }
+ const items=[];
+ for(const n of [...new Set([...q.keys(),...a.keys()])].sort((x,y)=>x-y)){
+  const x=q.get(n),y=a.get(n);
+  if(!x||!y){issues.push({code:'UNMATCHED_NUMBER',number:n});continue;}
+  if(!x.original_id||x.original_id!==y.original_id){issues.push({code:'ID_MISMATCH',number:n,problem:x.original_id,answer:y.original_id});continue;}
+  items.push({number:n,original_id:x.original_id,problem_page:x.page,answer_page:y.page,problem_column:x.column,answer_column:y.column,problem_heading_y:x.heading_y,answer_heading_y:y.heading_y});
+ }
+ const idset=new Set(); for(const it of items){if(idset.has(it.original_id))issues.push({code:'DUPLICATE_ID_IN_SET',id:it.original_id});idset.add(it.original_id);}
+ if(question.meta.setKey==='G6_S1_U5_P1')issues.push({code:'KNOWN_SPLIT_PAGE_79',number:79,help:'해설 79번의 제목과 실제 본문이 서로 다른 페이지'});
+ return {set_key:question.meta.setKey,problem_file:question.meta.name,answer_file:answer.meta.name,problem_sha256:question.hash,answer_sha256:answer.hash,problem_total:question.items.length,answer_total:answer.items.length,matched:items.length,items,issues,status:issues.length?'REVIEW_REQUIRED':'STRUCTURAL_MATCH_REVIEW_PENDING',student_published:false,teacher_approved:false};
+}
+function toCandidate(pairs){
+ const seen=new Map(),warnings=[];
+ for(const pair of pairs)for(const item of pair.items){
+  const prior=seen.get(item.original_id);
+  if(prior&&prior!==pair.set_key)warnings.push({code:'CROSS_SET_ID_COLLISION',id:item.original_id,sets:[prior,pair.set_key]});
+  seen.set(item.original_id,pair.set_key);
+ }
+ return {schema:SCHEMA,student_published:false,teacher_approved:false,source:'BROWSER_METADATA_ONLY',historical_registry_checked:false,requires_server_review:true,created_at:new Date().toISOString(),set_count:pairs.length,item_count:pairs.reduce((n,x)=>n+x.items.length,0),warnings,pairs};
+}
+function ensureUniqueAcrossExisting(candidate,existing){
+ // existing may be stored historical catalog; fail safely when missing the complete registry.
+ if(!existing||!Array.isArray(existing.items))throw Error('누적 등록 ID 원장이 없습니다. 승인 불가');
+ const map=new Map(existing.items.map(i=>[i.original_id,i.set_key]));
+ return candidate.pairs.flatMap(p=>p.items.filter(i=>map.has(i.original_id)&&map.get(i.original_id)!==p.set_key).map(i=>({code:'CROSS_REGISTERED_COLLISION',id:i.original_id,existing:map.get(i.original_id),incoming:p.set_key})));
+}
+
+// Historical reference: verified 2047 metadata pairs; not content approval.
+// Private 2047-item historical registry removed: never ship in public website.
+const $=id=>document.getElementById(id);let pdfModule=null,docs={},candidate=null;
+function say(msg){$('progress').textContent=msg}
+function safeText(target,value){target.textContent=String(value)}
+function fmtIssue(i){return [i.code, i.number!=null?`#${i.number}`:'',i.id||'',i.help||''].filter(Boolean).join(' ')}
+async function sha(array){if(!crypto.subtle)throw Error('SHA-256이 지원되지 않는 보안 페이지(HTTPS)가 필요합니다.');const hash=await crypto.subtle.digest('SHA-256',array);return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function getPdfLib(){
+ if(pdfModule)return pdfModule;
+ // Pair API and worker exactly; no unpinned 'latest' dependencies.
+ try{pdfModule=await import('./vendor/pdf.min.mjs');}catch(e){throw Error('PDF 분석 모듈을 가져오지 못했습니다. 사이트가 빌드·배포됐는지 확인하세요.');}
+ pdfModule.GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.min.mjs', import.meta.url).href;
+ return pdfModule;
+}
+async function parseFile(file){
+ if(!file)throw Error('PDF 파일 두 개를 모두 선택하세요.');
+ const meta=parseName(file.name);if(file.size>40*1024*1024)throw Error('휴대폰 안전 시험에서는 PDF 한 개 40MB까지만 허용합니다.');
+ const bytes=await file.arrayBuffer();if(new TextDecoder().decode(bytes.slice(0,5))!=='%PDF-')throw Error('PDF 원본이 아닙니다.');
+ const hash=await sha(bytes), lib=await getPdfLib();
+ const pdf=await lib.getDocument({data:new Uint8Array(bytes),stopAtErrors:true,isEvalSupported:false}).promise;
+ if(pdf.numPages>200)throw Error('200쪽 초과 파일은 휴대폰에서 처리하지 않습니다.');
+ const items=[],issues=[];let header='';
+ for(let p=1;p<=pdf.numPages;p++){
+  if(p===1||p%5===0) {say(`${meta.name}: ${p}/${pdf.numPages}쪽 분석 중`);await new Promise(r=>setTimeout(r,0));}
+  const page=await pdf.getPage(p);const viewport=page.getViewport({scale:1});const text=await page.getTextContent();
+  if(p===1) header=text.items.map(x=>x.str).join(' ').slice(0,450);
+  const spans=text.items.map(t=>{const pt=viewport.convertToViewportPoint(t.transform[4],t.transform[5]);return {str:t.str,x:pt[0],y:pt[1]}});
+  const result=extractPage(spans,viewport.width,p,meta.kind);items.push(...result.items);issues.push(...result.issues);
+  page.cleanup();
+ }
+ const h=header.replace(/\s+/g,'');
+ if(!h.includes(`초${meta.grade}-${meta.semester}${meta.unit}.`))issues.push({code:'PDF_INTERNAL_HEADER_UNVERIFIED'});
+ docs[meta.kind]={pdf,meta};return {meta,hash,items,issues};
+}
+function renderResult(data){
+ const pair=data.pairs[0];$('result').hidden=false;
+ const count=document.createElement('p'); count.textContent=`${pair.set_key} · 문제 ${pair.problem_total}개 / 해설 ${pair.answer_total}개 / 번호·ID 일치 ${pair.matched}개`;
+ $('summary').replaceChildren(count);
+ const all=[...pair.issues,...data.warnings];const msg=document.createElement('div');msg.className=all.length?'warn':'ok';msg.textContent=all.length?`검토 필요 ${all.length}건 · 자동 사용 금지`:'구조 검사가 일치했습니다. 단, 누적 ID 충돌·풀이 내용·이미지 완전성은 아직 미검증입니다.';$('summary').appendChild(msg);
+ safeText($('issues'),all.length?all.slice(0,80).map(fmtIssue).join('\n'):'표면상 불일치 없음 · 교사 승인 전 후보 상태');
+ $('save').disabled=false;$('previews').style.display=pair.items.length?'block':'none';
+ const sel=$('sel');sel.replaceChildren();for(const it of pair.items){const o=document.createElement('option');o.value=it.number;o.textContent=`${it.number}번 · 고유 ID ${it.original_id} (문제 ${it.problem_page}p / 해설 ${it.answer_page}p)`;sel.append(o)}
+}
+$('run').addEventListener('click',async()=>{
+ $('run').disabled=true;$('result').hidden=true;$('previews').style.display='none'; candidate=null;docs={};
+ try{const f1=$('prob').files[0],f2=$('ans').files[0];const a=parseName(f1?.name||''),b=parseName(f2?.name||'');
+  if(a.kind!=='problem'||b.kind!=='answer'||a.setKey!==b.setKey)throw Error('문제·해설의 학년·단원·편이 일치해야 합니다.');
+  const q=await parseFile(f1),ans=await parseFile(f2);const pair=buildPair(q,ans);if(pair.matched===0)throw Error('문항을 찾지 못했습니다. 등록할 수 없습니다.');
+  const oldWarnings=[{code:'HISTORICAL_REGISTRY_NOT_CHECKED',help:'이 시험 화면에는 비공개 누적 문항 원장이 없습니다. G2 비공개 승인 전에 반드시 다른 등록 자료와 고유 ID 충돌을 확인하세요.'}];
+  candidate=toCandidate([pair]);candidate.warnings.push(...oldWarnings);
+  if(oldWarnings.length)pair.status='REVIEW_REQUIRED';
+  renderResult(candidate);say(`분석 완료 · ${pair.matched}개 번호·ID 일치 · ${pair.issues.length+candidate.warnings.length}건 검토 필요`);
+ }catch(e){say('검사 실패: '+(e?.message||String(e)));}finally{$('run').disabled=false}
+});
+$('show').addEventListener('click',async()=>{
+ if(!candidate||!docs.problem?.pdf||!docs.answer?.pdf)return;
+ const pair=candidate.pairs[0],item=pair.items.find(i=>i.number===Number($('sel').value));if(!item)return;
+ for(const [pdf,pageNumber,el] of [[docs.problem.pdf,item.problem_page,$('qcan')],[docs.answer.pdf,item.answer_page,$('acan')]]){
+  const page=await pdf.getPage(pageNumber),scale=Math.min(1.2,370/page.getViewport({scale:1}).width),vp=page.getViewport({scale});el.width=Math.ceil(vp.width);el.height=Math.ceil(vp.height);
+  const ctx=el.getContext('2d');await page.render({canvasContext:ctx,viewport:vp}).promise;page.cleanup();
+ } if(pair.issues.some(i=>i.number===79&&i.code==='KNOWN_SPLIT_PAGE_79'))say('초6 79번: 해설 제목과 실제 이미지가 다른 페이지에 있습니다. G2 교사 확인 필수.');
+});
+$('save').addEventListener('click',()=>{
+ if(!candidate)return; const blob=new Blob([JSON.stringify(candidate,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`GW_G4_검토대기_${candidate.pairs[0].set_key}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+});
+$('reset').addEventListener('click',()=>location.reload());
+</script></body></html>
