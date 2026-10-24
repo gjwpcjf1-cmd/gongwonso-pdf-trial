@@ -32,6 +32,15 @@ jobs:
           ! grep -q 'const REGISTRY = new Map' site/index.html
       - name: PDF.js real parsing regression (synthetic PDFs only)
         run: node scripts/smoke.mjs
+      - name: Browser UI safety regression (synthetic PDFs only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix /tmp/gw-browser --no-save --ignore-scripts --no-audit --no-fund --no-package-lock playwright-core@1.56.1
+          export GW_CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$GW_CHROME_BIN"
+          python3 -m http.server 8765 --directory site >/tmp/gw-browser-server.log 2>&1 &
+          node scripts/browser-smoke.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
