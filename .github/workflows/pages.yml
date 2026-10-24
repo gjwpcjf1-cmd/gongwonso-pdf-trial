@@ -32,6 +32,8 @@ jobs:
           ! grep -q 'const REGISTRY = new Map' site/index.html
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload only public site (never PDF, answer keys, registry or student records)
         uses: actions/upload-pages-artifact@v4
         with:
