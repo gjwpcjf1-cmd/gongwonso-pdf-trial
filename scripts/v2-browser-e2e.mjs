@@ -82,6 +82,34 @@ try{
    note('M'+g+' full-scale '+result.count+' items with 2'+String.fromCharCode(215)+result.count+' SHA-linked PDFs validated');
   } else note('M'+g+' synthetic PDF pair saved');
  }
+
+ if(full){
+  await p.locator('[data-tab="view"]').click();
+  await p.locator('#showAnswer').check();
+  for(const [g,u,s] of [[1,3,1],[2,4,2],[3,5,null]]){
+   const key='M'+g+'_S'+(s??0)+'_U'+u+'_P1';
+   const id=await p.locator('#viewerSet option').evaluateAll((all,k)=>all.find(x=>x.textContent.includes(k))?.value,key);
+   assert(id,'MISSING_VIEWER_SET '+key);
+   await p.locator('#viewerSet').selectOption(id);
+   const count={1:176,2:174,3:122}[g];
+   for(const n of [1,Math.floor(count/2),count]){
+    await p.evaluate(()=>{document.querySelector('#qpage').textContent='QA_PENDING';document.querySelector('#apage').textContent='QA_PENDING'});
+    await p.locator('#numberNav button[data-n="'+n+'"]').click();
+    await p.waitForFunction(()=>['qpage','apage'].every(id=>/쪽 원본 일부/.test(document.getElementById(id)?.textContent||'')),null,{timeout:60000});
+    const stat=await p.evaluate(()=>['questionCanvas','answerCanvas'].map(id=>{
+     const c=document.getElementById(id),ctx=c.getContext('2d');
+     if(c.width<40||c.height<25)return {id,width:c.width,height:c.height,unique:0};
+     const d=ctx.getImageData(0,0,c.width,c.height).data;
+     const colors=new Set();
+     const step=Math.max(1,Math.floor(c.width*c.height/7000));
+     for(let j=0;j<c.width*c.height;j+=step)colors.add(d[j*4]+','+d[j*4+1]+','+d[j*4+2]);
+     return {id,width:c.width,height:c.height,unique:colors.size};
+    }));
+    for(const x of stat)assert(x.unique>=8,'BLANK_OR_STALE_CROP '+key+' #'+n+' '+JSON.stringify(x));
+   }
+   note('M'+g+' first/middle/last actual canvas crops rendered for both problem and solution');
+  }
+ }
  await p.reload({waitUntil:'load'});await p.waitForFunction(()=>window.__G7_READY===true);
  assert.deepEqual(await counts(p),{sets:3,files:6,tasks:0});
  note('Three sets survive browser reload');
