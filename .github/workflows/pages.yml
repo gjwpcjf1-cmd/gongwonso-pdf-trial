@@ -66,3 +66,12 @@ jobs:
       - name: Deploy to Pages HTTPS
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: V2 live HTTPS browser E2E (synthetic data only)
+        shell: bash
+        env:
+          GW_V2_TEST_URL: https://gjwpcjf1-cmd.github.io/gongwonso-pdf-trial/pdf-classroom-v2/index.html
+        run: |
+          set -euo pipefail
+          export GW_CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$GW_CHROME_BIN"
+          node scripts/v2-browser-e2e.mjs
