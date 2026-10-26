@@ -5,7 +5,8 @@ import path from 'node:path';
 import {chromium} from '/tmp/gw-browser/node_modules/playwright-core/index.mjs';
 const chrome=process.env.GW_CHROME_BIN;
 if(!chrome)throw Error('CHROME_MISSING');
-const root='/tmp/gw-v2-fixtures';
+const full=process.env.GW_V2_FULLSCALE==='1';
+const root=process.env.GW_V2_FIXTURE_ROOT||'/tmp/gw-v2-fixtures';
 const base=process.env.GW_V2_TEST_URL||'http://127.0.0.1:8765/pdf-classroom-v2/index.html';
 const browser=await chromium.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const notes=[],errors=[];
@@ -38,10 +39,37 @@ async function upload(p,g,u,s){
   await p.locator('#'+id).setInputFiles({name,mimeType:'application/pdf',buffer:fs.readFileSync(path.join(root,name))});
  }
  await p.locator('#register').click();
- await p.waitForFunction(()=>!document.querySelector('#register').disabled&&!document.querySelector('#busy').classList.contains('show')&&/등록 성공|등록 보류|이미 등록/.test(document.querySelector('#status')?.textContent||''),null,{timeout:90000});
+ await p.waitForFunction(()=>!document.querySelector('#register').disabled&&!document.querySelector('#busy').classList.contains('show')&&/등록 성공|등록 보류|이미 등록/.test(document.querySelector('#status')?.textContent||''),null,{timeout:full?240000:90000});
  const status=await p.locator('#status').innerText();
  assert.match(status,/등록 성공|이미 등록/,'PDF import: '+status);
  return status;
+}
+async function inspectFull(p,g,u,semester){
+ const setKey='M'+g+'_S'+(semester==null?0:semester)+'_U'+u+'_P1';
+ const want={1:176,2:174,3:122}[g];
+ return p.evaluate(async({setKey,want})=>{
+   const op=indexedDB.open('G7_PDF_DIRECT_TEACHER_V2',1);
+   const db=await new Promise((resolve,reject)=>{op.onsuccess=()=>resolve(op.result);op.onerror=()=>reject(op.error)});
+   const get=(store,key)=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(store,'readonly'),r=tx.objectStore(store).get(key);
+    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   const sets=await new Promise((resolve,reject)=>{
+     const r=db.transaction('sets','readonly').objectStore('sets').getAll();
+     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   const x=sets.find(v=>v.setKey===setKey);
+   if(!x||x.count!==want||x.items.length!==want)throw Error('FULL_SET_COUNT_MISMATCH '+setKey+' '+x?.count);
+   if(x.items.some((it,k)=>it.number!==k+1||!/^[0-9]{5,6}$/.test(it.originalId)||it.problemBox.length!==4||it.answerBox.length!==4||it.problemPage<1||it.answerPage<1))throw Error('FULL_ITEM_INDEX_INTEGRITY');
+   if(new Set(x.items.map(it=>it.originalId)).size!==want)throw Error('DUPLICATE_SOURCE_IDS');
+   for(const [suffix,hash] of [['q',x.qhash],['a',x.ahash]]){
+    const f=await get('files',x.id+':'+suffix);
+    if(!(f?.bytes instanceof Uint8Array))throw Error('PDF_FILE_BYTES_NOT_PERSISTED');
+    const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',f.bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(digest!==hash)throw Error('PERSISTED_PDF_SHA_MISMATCH_'+suffix);
+   }
+   return {count:x.count,qpages:x.qpages,apages:x.apages};
+ },{setKey,want});
 }
 try{
  const {cx,p}=await open();
@@ -49,7 +77,10 @@ try{
  for(const [g,u,s] of [[1,3,1],[2,4,2],[3,5,null]]){
   await upload(p,g,u,s);
   assert.deepEqual(await counts(p),{sets:g,files:g*2,tasks:0});
-  note('M'+g+' synthetic PDF pair saved');
+  if(full){
+   const result=await inspectFull(p,g,u,s);
+   note('M'+g+' full-scale '+result.count+' items with 2'+String.fromCharCode(215)+result.count+' SHA-linked PDFs validated');
+  } else note('M'+g+' synthetic PDF pair saved');
  }
  await p.reload({waitUntil:'load'});await p.waitForFunction(()=>window.__G7_READY===true);
  assert.deepEqual(await counts(p),{sets:3,files:6,tasks:0});
@@ -125,7 +156,7 @@ try{
  note('Corrupted backup rejected before any write');
  await isolated.cx.close();
  assert.deepEqual(errors,[]);
- console.log('V2_CHROMIUM_REAL_STORAGE_E2E_PASS',JSON.stringify({checks:notes.length,syntheticPDFOnly:true}));
+ console.log('V2_CHROMIUM_REAL_STORAGE_E2E_PASS',JSON.stringify({checks:notes.length,syntheticPDFOnly:true,fullScale:full,expectedItems:full?472:6}));
 }catch(e){
  console.error('V2_CHROMIUM_REAL_STORAGE_E2E_FAIL',e.stack||String(e));
  process.exitCode=1;
