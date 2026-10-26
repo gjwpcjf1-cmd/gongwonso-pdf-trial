@@ -6,7 +6,7 @@ import {chromium} from '/tmp/gw-browser/node_modules/playwright-core/index.mjs';
 const chrome=process.env.GW_CHROME_BIN;
 if(!chrome)throw Error('CHROME_MISSING');
 const root='/tmp/gw-v2-fixtures';
-const base='http://127.0.0.1:8765/pdf-classroom-v2/index.html';
+const base=process.env.GW_V2_TEST_URL||'http://127.0.0.1:8765/pdf-classroom-v2/index.html';
 const browser=await chromium.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const notes=[],errors=[];
 function note(s){notes.push(s);console.log('V2_E2E_PASS',s)}
