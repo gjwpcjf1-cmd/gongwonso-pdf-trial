@@ -80,7 +80,7 @@ try{
  await p.waitForFunction(()=>document.querySelectorAll('#taskList button[data-task]').length>=2);
  assert.equal((await counts(p)).tasks,2);
  note('Next lesson review task');
- await p.locator('#taskList button[data-task][data-num="1"]').first().click();
+ await p.locator('#taskList .task').filter({hasText:'(복습)'}).locator('button[data-task][data-num="1"]').click();
  await p.locator('[data-tab="next"]').click();
  assert.match(await p.locator('#nextResult').innerText(),/미해결 오답·미풀이가 없습니다/);
  note('Correct review closes unresolved queue');
