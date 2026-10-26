@@ -52,6 +52,8 @@ jobs:
           python3 -m venv /tmp/gw-v2py
           /tmp/gw-v2py/bin/pip install --disable-pip-version-check reportlab
           /tmp/gw-v2py/bin/python scripts/v2-ci-fixtures.py /tmp/gw-v2-fixtures
+          export GW_CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$GW_CHROME_BIN"
           node scripts/v2-browser-e2e.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
