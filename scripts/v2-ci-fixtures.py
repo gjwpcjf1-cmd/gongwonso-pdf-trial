@@ -6,6 +6,8 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.utils import ImageReader
+from PIL import Image
+import random
 out=Path(sys.argv[1] if len(sys.argv)>1 else '/tmp/gw-v2-fixtures')
 out.mkdir(parents=True,exist_ok=True)
 fonts=['/usr/share/fonts/truetype/nanum/NanumGothic.ttf','/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf','/usr/share/fonts/truetype/baekmuk/gulim.ttf']
@@ -25,6 +27,11 @@ for grade,unit,semester in [(1,3,1),(2,4,2),(3,5,None)]:
   c=canvas.Canvas(str(p),pagesize=(595,842),pageCompression=1)
   title=('중%d %d학기 %d단원 연습'%(grade,semester,unit)) if semester else ('중%d %d단원 학기 구분 없음'%(grade,unit))
   for page_index in range((count+1)//2):
+   if full:
+    noise=random.Random(grade*100000+page_index*2+(1 if kind=='답' else 0)).randbytes(125*100*3)
+    pageimg=ImageReader(Image.frombytes('RGB',(125,100),noise))
+   else:
+    pageimg=img
    if page_index==0:
     c.setFont('FixtureHangul',15)
     c.drawString(63,808,title)
@@ -35,7 +42,7 @@ for grade,unit,semester in [(1,3,1),(2,4,2),(3,5,None)]:
     c.drawString(63,y,str(n)+'번 '+('문제' if kind=='문' else '해설'))
     c.setFont('FixtureHangul',10)
     c.drawString(170,y,('%d%05d'%(grade,n)))
-    c.drawImage(img,63,y-120,width=214,height=95)
+    c.drawImage(pageimg,63,y-120,width=214,height=95)
    c.showPage()
   c.save()
   print(p.name,p.stat().st_size,'items=',count)
