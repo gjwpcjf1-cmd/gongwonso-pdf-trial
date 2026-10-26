@@ -38,7 +38,7 @@ async function upload(p,g,u,s){
   await p.locator('#'+id).setInputFiles({name,mimeType:'application/pdf',buffer:fs.readFileSync(path.join(root,name))});
  }
  await p.locator('#register').click();
- await p.waitForFunction(()=>/등록 성공|등록 보류|이미 등록/.test(document.querySelector('#status')?.textContent||''),{timeout:90000});
+ await p.waitForFunction(()=>!document.querySelector('#register').disabled&&!document.querySelector('#busy').classList.contains('show')&&/등록 성공|등록 보류|이미 등록/.test(document.querySelector('#status')?.textContent||''),null,{timeout:90000});
  const status=await p.locator('#status').innerText();
  assert.match(status,/등록 성공|이미 등록/,'PDF import: '+status);
  return status;
