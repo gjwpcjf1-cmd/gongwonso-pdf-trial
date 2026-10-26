@@ -75,3 +75,16 @@ jobs:
           export GW_CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -n "$GW_CHROME_BIN"
           node scripts/v2-browser-e2e.mjs
+
+      - name: V2 full scale 472-item HTTPS E2E (synthetic PDF only)
+        shell: bash
+        env:
+          GW_V2_FULLSCALE: "1"
+          GW_V2_FIXTURE_ROOT: /tmp/gw-v2-full
+          GW_V2_TEST_URL: https://gjwpcjf1-cmd.github.io/gongwonso-pdf-trial/pdf-classroom-v2/index.html
+        run: |
+          set -euo pipefail
+          /tmp/gw-v2py/bin/python scripts/v2-ci-fixtures.py /tmp/gw-v2-full --full
+          export GW_CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$GW_CHROME_BIN"
+          node scripts/v2-browser-e2e.mjs
